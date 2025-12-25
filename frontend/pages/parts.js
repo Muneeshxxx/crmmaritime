@@ -3,6 +3,10 @@ import axios from 'axios';
 
 export default function PartManagement() {
   const [parts, setParts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     model_number: '',
@@ -19,8 +23,14 @@ export default function PartManagement() {
   const [modal, setModal] = useState(null);
 
   useEffect(() => {
-    axios.get('/api/parts').then(res => setParts(res.data));
-  }, [refresh]);
+    const params = { page, limit: 10 };
+    if (search) params.q = search;
+    axios.get('/api/parts', { params }).then(res => {
+      setParts(res.data.parts);
+      setTotal(res.data.total);
+      setTotalPages(res.data.totalPages);
+    });
+  }, [page, search, refresh]);
 
   function handleChange(e) {
     const { name, value, files } = e.target;
@@ -126,6 +136,22 @@ export default function PartManagement() {
       </form>
       <div className="part-list">
         <h2>All Parts</h2>
+        <div className="search-paging">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Search parts..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', width: '300px' }}
+            />
+          </div>
+          <div className="paging">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</button>
+            <span>Page {page} of {totalPages} ({total} total)</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next</button>
+          </div>
+        </div>
         <table>
           <thead>
             <tr>
@@ -219,6 +245,10 @@ export default function PartManagement() {
           min-width: 180px;
         }
         .modal button { margin-top: 1rem; padding: 0.5rem 1.5rem; background: #0070f3; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .search-paging { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .paging { display: flex; gap: 1rem; align-items: center; }
+        .paging button { padding: 0.5rem 1rem; background: #0070f3; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        .paging button:disabled { background: #ccc; cursor: not-allowed; }
       `}</style>
     </div>
   );

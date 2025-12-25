@@ -3,9 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/users": "pages/users.js",
-  "/upload-csv": "pages/upload-csv.js",
   "/parts": "pages/parts.js",
-  "/profile": "pages/profile.js",
   "/search": "pages/search.js"
 }

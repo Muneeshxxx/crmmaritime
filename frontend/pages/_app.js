@@ -26,6 +26,7 @@ export default function App({ Component, pageProps }) {
     localStorage.removeItem('user');
     setIsAuthenticated(false);
     setUser(null);
+    window.location.href = '/login';
   };
 
   if (!isAuthenticated) {

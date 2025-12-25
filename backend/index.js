@@ -165,20 +165,31 @@ app.post('/api/parts/upload-csv', upload.single('csv'), async (req, res) => {
     });
 });
 
-// CRUD: Get all parts (with optional search)
+// CRUD: Get all parts (with optional search and paging)
 app.get('/api/parts', async (req, res) => {
-  const { q } = req.query;
+  const { q, page = 1, limit = 10 } = req.query;
   let sql = 'SELECT * FROM parts';
+  let countSql = 'SELECT COUNT(*) as total FROM parts';
   let params = [];
   if (q) {
     sql += ` WHERE model_number LIKE ? OR article_number LIKE ? OR article_name LIKE ? OR part_name LIKE ? OR part_pseudo_name LIKE ? OR part_description LIKE ?`;
+    countSql += ` WHERE model_number LIKE ? OR article_number LIKE ? OR article_name LIKE ? OR part_name LIKE ? OR part_pseudo_name LIKE ? OR part_description LIKE ?`;
     params = Array(6).fill(`%${q}%`);
   }
+  sql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
   try {
     const conn = await getConnection();
     const [rows] = await conn.execute(sql, params);
+    const [countRows] = await conn.execute(countSql, params.slice(0, params.length - 2));
     await conn.end();
-    res.json(rows);
+    res.json({
+      parts: rows,
+      total: countRows[0].total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(countRows[0].total / parseInt(limit))
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
