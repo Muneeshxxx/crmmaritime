@@ -1,11 +1,6 @@
 {
-  "/_error": "pages/_error.js",
   "/_app": "pages/_app.js",
-  "/login": "pages/login.js",
-  "/": "pages/index.js",
-  "/parts": "pages/parts.js",
-  "/profile": "pages/profile.js",
-  "/search": "pages/search.js",
-  "/upload-csv": "pages/upload-csv.js",
-  "/_document": "pages/_document.js"
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js"
 }
