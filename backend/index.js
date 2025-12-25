@@ -89,19 +89,22 @@ app.post('/api/auth/init-users', async (req, res) => {
     const hashedAdminPassword = await bcrypt.hash('admin123', 10);
     const hashedUserPassword = await bcrypt.hash('user123', 10);
 
-    // Update or insert
+    // Delete existing and insert
+    await conn.execute('DELETE FROM users WHERE email = ?', ['admin@example.com']);
+    await conn.execute('DELETE FROM users WHERE email = ?', ['user@example.com']);
+
     await conn.execute(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = VALUES(password)',
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
       ['Admin User', 'admin@example.com', hashedAdminPassword, 'admin']
     );
 
     await conn.execute(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = VALUES(password)',
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
       ['Regular User', 'user@example.com', hashedUserPassword, 'user']
     );
 
     await conn.end();
-    res.json({ message: 'Test users updated successfully' });
+    res.json({ message: 'Test users created successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

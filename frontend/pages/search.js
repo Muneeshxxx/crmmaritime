@@ -6,6 +6,15 @@ export default function SearchPage() {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   function handleSearch() {
     axios.get(`/api/parts?q=${encodeURIComponent(search)}`).then(res => setResults(res.data));
