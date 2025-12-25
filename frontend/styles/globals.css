@@ -1,92 +1,20 @@
+@tailwind components;
+@tailwind utilities;
+
 body {
   background: #fff;
   font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   margin: 0;
   color: #222;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-button {
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s;
-}
-
-input, button {
-  outline: none;
-}
-
-/* Theme colors */
-html {
-  --theme-red: #d32f2f;
-  --theme-black: #222;
-  --theme-yellow: #fbc02d;
-  --theme-white: #fff;
-}
+=======
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
-  background: var(--theme-white);
-  color: var(--theme-black);
-}
-
-a, .link, .model-link, .part-link {
-  color: var(--theme-red);
-  transition: color 0.15s;
-}
-a:hover, .link:hover, .model-link:hover, .part-link:hover {
-  color: var(--theme-black);
-}
-
-button, .search-btn, .dashboard-search button, .modal button, .form-row button {
-  background: var(--theme-red);
-  color: var(--theme-white);
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-button:last-child, .dashboard-search button:last-child {
-  background: var(--theme-black);
-  color: var(--theme-white);
-}
-
-input, textarea {
-  border: 1px solid var(--theme-black);
-  border-radius: 6px;
-  padding: 0.6rem;
-  font-size: 1rem;
-}
-
-.count-card.model-card {
-  border-top: 6px solid var(--theme-red) !important;
-}
-.count-card.parts-card {
-  border-top: 6px solid var(--theme-yellow) !important;
-}
-
-.results-header {
-  background: var(--theme-yellow) !important;
-  color: var(--theme-black) !important;
-}
-.results-row {
-  background: var(--theme-white) !important;
-  border-bottom: 1px solid #eee !important;
-}
-.modal {
-  background: var(--theme-white) !important;
-  color: var(--theme-black) !important;
-}
-.sidebar {
-  background: linear-gradient(180deg, var(--theme-white) 0%, #fbc02d22 100%) !important;
-  color: var(--theme-black) !important;
-}
-.sidebar-menu a {
-  color: var(--theme-black) !important;
-}
-.sidebar-menu a:hover, .sidebar-menu a.active {
-  background: var(--theme-yellow) !important;
-  color: var(--theme-red) !important;
+  background: #fff;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  margin: 0;
+  color: #222;
 }

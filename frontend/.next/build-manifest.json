@@ -37,10 +37,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/parts.js"
     ],
-    "/users": [
+    "/profile": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/users.js"
+      "static/chunks/pages/profile.js"
+    ],
+    "/search": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/search.js"
     ]
   },
   "ampFirstPages": []
