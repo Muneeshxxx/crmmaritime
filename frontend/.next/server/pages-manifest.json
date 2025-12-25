@@ -1,10 +1,10 @@
 {
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
-  "/": "pages/index.js",
   "/login": "pages/login.js",
-  "/parts": "pages/parts.js",
+  "/": "pages/index.js",
   "/profile": "pages/profile.js",
+  "/parts": "pages/parts.js",
   "/search": "pages/search.js",
   "/upload-csv": "pages/upload-csv.js",
   "/_document": "pages/_document.js"

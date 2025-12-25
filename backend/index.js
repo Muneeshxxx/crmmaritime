@@ -5,10 +5,12 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 require('dotenv').config();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 // MySQL connection
 const dbConfig = {
@@ -30,6 +32,86 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 async function getConnection() {
   return await mysql.createConnection(dbConfig);
 }
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access token required' });
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
+
+// Auth routes
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT * FROM users WHERE email = ?', [email]);
+    await conn.end();
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role, name: user.name }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Initialize test users (run once)
+app.post('/api/auth/init-users', async (req, res) => {
+  try {
+    const conn = await getConnection();
+
+    // Check if users already exist
+    const [existing] = await conn.execute('SELECT COUNT(*) as count FROM users');
+    if (existing[0].count > 0) {
+      await conn.end();
+      return res.json({ message: 'Users already initialized' });
+    }
+
+    // Create test users
+    const hashedAdminPassword = await bcrypt.hash('admin123', 10);
+    const hashedUserPassword = await bcrypt.hash('user123', 10);
+
+    await conn.execute(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      ['Admin User', 'admin@example.com', hashedAdminPassword, 'admin']
+    );
+
+    await conn.execute(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      ['Regular User', 'user@example.com', hashedUserPassword, 'user']
+    );
+
+    await conn.end();
+    res.json({ message: 'Test users created successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post('/api/parts/upload-csv', upload.single('csv'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
