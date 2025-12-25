@@ -229,6 +229,92 @@ app.delete('/api/parts/:id', async (req, res) => {
   }
 });
 
+// User management routes (admin only)
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+// CRUD: Get all users
+app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT id, name, email, role, created_at FROM users');
+    await conn.end();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CRUD: Get user by ID
+app.get('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [req.params.id]);
+    await conn.end();
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CRUD: Create user
+app.post('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+  const { name, email, password, role } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const conn = await getConnection();
+    const [result] = await conn.execute(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, role]
+    );
+    await conn.end();
+    res.json({ id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CRUD: Update user
+app.put('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const { name, email, role, password } = req.body;
+  try {
+    const conn = await getConnection();
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await conn.execute(
+        'UPDATE users SET name=?, email=?, role=?, password=? WHERE id=?',
+        [name, email, role, hashedPassword, req.params.id]
+      );
+    } else {
+      await conn.execute(
+        'UPDATE users SET name=?, email=?, role=? WHERE id=?',
+        [name, email, role, req.params.id]
+      );
+    }
+    await conn.end();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CRUD: Delete user
+app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const conn = await getConnection();
+    await conn.execute('DELETE FROM users WHERE id = ?', [req.params.id]);
+    await conn.end();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Backend API running on http://localhost:${PORT}`);
 });

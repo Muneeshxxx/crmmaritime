@@ -5,6 +5,6 @@
   "/": "pages/index.js",
   "/upload-csv": "pages/upload-csv.js",
   "/parts": "pages/parts.js",
-  "/profile": "pages/profile.js",
-  "/search": "pages/search.js"
+  "/search": "pages/search.js",
+  "/profile": "pages/profile.js"
 }
