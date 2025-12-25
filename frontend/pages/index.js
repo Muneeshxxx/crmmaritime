@@ -69,7 +69,7 @@ export default function Dashboard() {
           <div className="weight-col">Part Weight</div>
           <div className="size-col">Part Size</div>
         </div>
-        {filtered.map(part => (
+        {Array.isArray(filtered) && filtered.map(part => (
           <div className="results-row" key={part.id}>
             <div className="model-col model-link" onClick={() => setModal(part)} style={{ color: '#d32f2f', cursor: 'pointer', textDecoration: 'underline' }}>{part.model_number}</div>
             <div className="article-col">{part.article_number}</div>

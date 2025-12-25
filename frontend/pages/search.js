@@ -50,7 +50,7 @@ export default function SearchPage() {
           <div className="weight-col">Part Weight</div>
           <div className="size-col">Part Size</div>
         </div>
-        {results.map(part => (
+        {Array.isArray(results) && results.map(part => (
           <div className="results-row" key={part.id}>
             <div className="model-col model-link" onClick={() => setSelected(part)} style={{ color: '#0070f3', cursor: 'pointer', textDecoration: 'underline' }}>{part.model_number}</div>
             <div className="article-col">{part.article_number}</div>
