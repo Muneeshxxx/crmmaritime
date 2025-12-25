@@ -24,6 +24,11 @@ export default function SearchPage() {
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
         />
         <button className="search-btn" onClick={handleSearch}>Search</button>
+        {user && user.role === 'admin' && (
+          <Link href="/parts">
+            <button className="add-btn">Add Parts</button>
+          </Link>
+        )}
       </div>
       <div className="search-results-table">
         <div className="results-header">
@@ -74,6 +79,7 @@ export default function SearchPage() {
         .search-bar-row { display: flex; gap: 1rem; margin-bottom: 2rem; }
         .search-input { flex: 1; padding: 0.75rem; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; }
         .search-btn { padding: 0.75rem 1.5rem; background: #0070f3; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .add-btn { padding: 0.75rem 1.5rem; background: #28a745; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .search-results-table { width: 100%; }
         .results-header, .results-row { display: grid; grid-template-columns: 1.2fr 1.2fr 2fr 2fr 2fr 1fr 1fr; align-items: center; }
         .results-header { background: #f5f7fa; font-weight: 600; border-radius: 8px 8px 0 0; padding: 0.7rem 0; }

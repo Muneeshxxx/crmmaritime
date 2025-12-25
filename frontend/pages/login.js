@@ -19,7 +19,7 @@ export default function Login() {
       if (res.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/');
+        onLogin(data.user);
       } else {
         setError(data.error);
       }
