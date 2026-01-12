@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-export default function Sidebar({ user, logout }) {
+export default function Sidebar({ user, onLogout }) {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -49,7 +49,7 @@ export default function Sidebar({ user, logout }) {
               </div>
               <span>{user.name}</span>
             </div>
-            <button onClick={logout} style={{ width: '100%', padding: '0.5rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            <button onClick={onLogout} style={{ width: '100%', padding: '0.5rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
               Logout
             </button>
           </div>

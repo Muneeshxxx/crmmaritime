@@ -1,14 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import axios from 'axios';
 import Link from 'next/link';
-
 
 export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [parts, setParts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [modal, setModal] = useState(null);
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+      router.replace('/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     axios.get('/api/parts').then(res => {
@@ -26,7 +34,6 @@ export default function Dashboard() {
           ) : [])
     );
   }
-
 
   // Model and Parts count
   const modelCount = Array.isArray(parts) ? new Set(parts.map(p => p.model_number)).size : 0;
@@ -109,45 +116,21 @@ export default function Dashboard() {
         .count-card { flex: 1; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0002; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .model-card { border-top: 6px solid #d32f2f; }
         .parts-card { border-top: 6px solid #fbc02d; }
-        .count-title { font-size: 1.2rem; color: #222; margin-bottom: 0.5rem; font-weight: 600; }
-        .count-value { font-size: 2.5rem; font-weight: bold; color: #222; }
-        .dashboard-search { display: flex; gap: 1rem; margin-bottom: 2rem; }
-        .dashboard-search input { flex: 1; padding: 0.75rem; font-size: 1.1rem; border-radius: 6px; border: 1px solid #222; }
-        .dashboard-search button { padding: 0.75rem 1.5rem; background: #d32f2f; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .dashboard-search button:last-child { background: #222; color: #fff; }
-        .search-results-table { width: 100%; }
-        .results-header, .results-row { display: grid; grid-template-columns: 1.2fr 1.2fr 2fr 2fr 2fr 1fr 1fr; align-items: center; }
-        .results-header { background: #fbc02d; color: #222; font-weight: 600; border-radius: 8px 8px 0 0; padding: 0.7rem 0; }
-        .results-row { background: #fff; border-bottom: 1px solid #eee; padding: 0.7rem 0; transition: box-shadow 0.2s; cursor: pointer; }
-        .results-row:hover { box-shadow: 0 4px 16px #d32f2f22; }
-        .model-link:hover { color: #222; }
-        .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0008; display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: #fff; border-radius: 10px; padding: 2rem; min-width: 320px; max-width: 90vw; box-shadow: 0 8px 32px #0003; position: relative; }
-        .modal-details-2col {
-          display: flex;
-          gap: 2rem;
-          margin-bottom: 1rem;
+      }
+                .count-title { font-size: 1.2rem; color: #555; margin-bottom: 0.5rem; }
+                .count-value { font-size: 2.5rem; font-weight: bold; color: #222; }
+                .dashboard-search { display: flex; gap: 1rem; margin-bottom: 2rem; }
+                .dashboard-search input { flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px; }
+                .dashboard-search button { padding: 0.75rem 1.5rem; background: #d32f2f; color: white; border: none; border-radius: 5px; cursor: pointer; }
+                .search-results-table { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0002; overflow: hidden; }
+                .results-header, .results-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr 1.5fr 0.8fr 0.8fr; gap: 1rem; padding: 1rem; border-bottom: 1px solid #eee; }
+                .results-header { background: #f5f5f5; font-weight: bold; }
+                .modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+                .modal { background: white; padding: 2rem; border-radius: 10px; max-width: 600px; width: 90%; }
+                .modal-details-2col { display: flex; gap: 2rem; margin: 1rem 0; }
+                .modal-col { flex: 1; }
+                .modal button { padding: 0.75rem 1.5rem; background: #d32f2f; color: white; border: none; border-radius: 5px; cursor: pointer; }
+              `}</style>
+            </div>
+          );
         }
-        .modal-col {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .modal-col-left {
-          min-width: 180px;
-        }
-        .modal-col-right {
-          min-width: 180px;
-        }
-        .modal button { margin-top: 1rem; padding: 0.5rem 1.5rem; background: #d32f2f; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        h1 { margin-bottom: 1.5rem; color: #d32f2f; }
-        @media (max-width: 900px) {
-          .results-header, .results-row { grid-template-columns: 1fr 1fr 1.5fr 1.5fr 1.5fr 1fr 1fr; }
-        }
-        @media (max-width: 700px) {
-          .results-header, .results-row { grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr; font-size: 0.95em; }
-        }
-      `}</style>
-    </div>
-  );
-}

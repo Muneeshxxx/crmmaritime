@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import '../styles/globals.css';
 import Sidebar from '../components/Sidebar';
-import Login from './login';
 
 export default function App({ Component, pageProps }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,7 +29,7 @@ export default function App({ Component, pageProps }) {
   };
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Component {...pageProps} onLogin={handleLogin} />;
   }
 
   return (
