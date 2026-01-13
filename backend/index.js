@@ -5,6 +5,8 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 require('dotenv').config();
@@ -22,7 +24,38 @@ const dbConfig = {
 const upload = multer({ dest: path.join(__dirname, 'uploads/') });
 
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://slang.sl-engineering.com',
+  credentials: true
+}));
+// Auth: Login route
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT * FROM users WHERE email = ?', [email]);
+    await conn.end();
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const user = rows[0];
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role, name: user.name }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -150,6 +183,6 @@ app.delete('/api/parts/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend API running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend API running on http://0.0.0.0:${PORT}`);
 });
