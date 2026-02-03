@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 require('dotenv').config();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 // MySQL connection
 const dbConfig = {
@@ -23,11 +23,17 @@ const dbConfig = {
 // Multer setup for image uploads
 const upload = multer({ dest: path.join(__dirname, 'uploads/') });
 
-
+// Middleware: CORS and JSON (must be before all routes)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://slang.sl-engineering.com',
+  origin: [
+    process.env.FRONTEND_URL || 'http://slang.sl-engineering.com',
+    'http://localhost:3000'
+  ],
   credentials: true
 }));
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Auth: Login route
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
@@ -56,8 +62,6 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Helper: get DB connection
 async function getConnection() {

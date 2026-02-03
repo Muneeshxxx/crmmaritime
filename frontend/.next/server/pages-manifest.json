@@ -3,5 +3,10 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
+  "/parts": "pages/parts.js",
+  "/search": "pages/search.js",
+  "/profile": "pages/profile.js",
+  "/users": "pages/users.js",
+  "/login": "pages/login.js",
   "/upload-csv": "pages/upload-csv.js"
 }

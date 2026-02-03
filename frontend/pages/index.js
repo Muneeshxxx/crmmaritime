@@ -4,28 +4,58 @@ import axios from 'axios';
 import Link from 'next/link';
 
 
-export default function Dashboard() {
+export default function Dashboard({ user }) {
   const [search, setSearch] = useState('');
   const [parts, setParts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [modal, setModal] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     axios.get('/api/parts').then(res => {
       setParts(res.data);
       setFiltered(res.data);
     });
-  }, []);
+  }, [user]);
 
   function handleSearch() {
-    setFiltered(
+    const filteredData =
       !search
         ? parts
         : parts.filter(p =>
             [p.model_number, p.article_number, p.article_name, p.part_name, p.part_pseudo_name].some(f => f && f.toLowerCase().includes(search.toLowerCase()))
-          )
-    );
+          );
+    setFiltered(filteredData);
+    setCurrentPage(1);
   }
+
+  function handleSort(field) {
+    let order = sortOrder;
+    if (sortField === field) {
+      order = sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      order = 'asc';
+    }
+    setSortField(field);
+    setSortOrder(order);
+  }
+
+  // Sort filtered results
+  const sortedResults = [...filtered].sort((a, b) => {
+    if (!sortField) return 0;
+    const valA = (a[sortField] || '').toString().toLowerCase();
+    const valB = (b[sortField] || '').toString().toLowerCase();
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedResults.length / recordsPerPage);
+  const pagedResults = sortedResults.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
 
 
   // Model and Parts count
@@ -61,17 +91,17 @@ export default function Dashboard() {
       {/* Search Results Grid (same as search page) */}
       <div className="search-results-table">
         <div className="results-header">
-          <div className="model-col">Model Number</div>
-          <div className="article-col">Article Number</div>
-          <div className="article-name-col">Article Name</div>
-          <div className="part-name-col">Part Number</div>
-          <div className="pseudo-col">Part Pseudo Name</div>
-          <div className="weight-col">Part Weight</div>
-          <div className="size-col">Part Size</div>
+          <div className="model-col sortable" onClick={() => handleSort('model_number')}>Model Number {sortField === 'model_number' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="article-col sortable" onClick={() => handleSort('article_number')}>Article Number {sortField === 'article_number' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="article-name-col sortable" onClick={() => handleSort('article_name')}>Article Name {sortField === 'article_name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="part-name-col sortable" onClick={() => handleSort('part_name')}>Part Number {sortField === 'part_name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="pseudo-col sortable" onClick={() => handleSort('part_pseudo_name')}>Part Pseudo Name {sortField === 'part_pseudo_name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="weight-col sortable" onClick={() => handleSort('part_weight')}>Part Weight {sortField === 'part_weight' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
+          <div className="size-col sortable" onClick={() => handleSort('part_size')}>Part Size {sortField === 'part_size' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</div>
         </div>
-        {filtered.map(part => (
+        {pagedResults.map(part => (
           <div className="results-row" key={part.id}>
-            <div className="model-col model-link" onClick={() => setModal(part)} style={{ color: '#d32f2f', cursor: 'pointer', textDecoration: 'underline' }}>{part.model_number}</div>
+            <div className="model-col model-link" onClick={() => setModal(part)}>{part.model_number}</div>
             <div className="article-col">{part.article_number}</div>
             <div className="article-name-col">{part.article_name}</div>
             <div className="part-name-col">{part.part_name}</div>
@@ -80,6 +110,22 @@ export default function Dashboard() {
             <div className="size-col">{part.part_size}</div>
           </div>
         ))}
+        {/* Pagination controls */}
+        {sortedResults.length > 0 && (
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.7rem' }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{ padding: '0.5rem 1.2rem', borderRadius: 6, border: '1px solid #ccc', background: currentPage === 1 ? '#eee' : '#0070f3', color: currentPage === 1 ? '#888' : '#fff', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            >Prev</button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{ padding: '0.5rem 1.2rem', borderRadius: 6, border: '1px solid #ccc', background: currentPage === totalPages ? '#eee' : '#0070f3', color: currentPage === totalPages ? '#888' : '#fff', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            >Next</button>
+          </div>
+        )}
       </div>
       {modal && (
         <div className="modal-bg" onClick={() => setModal(null)}>
@@ -117,10 +163,15 @@ export default function Dashboard() {
         .dashboard-search button:last-child { background: #222; color: #fff; }
         .search-results-table { width: 100%; }
         .results-header, .results-row { display: grid; grid-template-columns: 1.2fr 1.2fr 2fr 2fr 2fr 1fr 1fr; align-items: center; }
-        .results-header { background: #fbc02d; color: #222; font-weight: 600; border-radius: 8px 8px 0 0; padding: 0.7rem 0; }
+        .sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
+        .sortable:hover { color: #2563eb; text-decoration: underline; }
         .results-row { background: #fff; border-bottom: 1px solid #eee; padding: 0.7rem 0; transition: box-shadow 0.2s; cursor: pointer; }
-        .results-row:hover { box-shadow: 0 4px 16px #d32f2f22; }
-        .model-link:hover { color: #222; }
+        .results-row:hover {
+          box-shadow: 0 4px 16px #2563eb22;
+          background: #2563eb22;
+          color: #2563eb;
+        }
+        .model-link:hover { color: #2563eb; text-decoration: underline; }
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0008; display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: #fff; border-radius: 10px; padding: 2rem; min-width: 320px; max-width: 90vw; box-shadow: 0 8px 32px #0003; position: relative; }
         .modal-details-2col {

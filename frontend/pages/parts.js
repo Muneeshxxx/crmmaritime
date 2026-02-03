@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function PartManagement() {
+    const [currentPage, setCurrentPage] = useState(1);
+    const recordsPerPage = 10;
   const [parts, setParts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     model_number: '',
@@ -19,8 +23,34 @@ export default function PartManagement() {
   const [modal, setModal] = useState(null);
 
   useEffect(() => {
-    axios.get('/api/parts').then(res => setParts(res.data));
+    axios.get('/api/parts').then(res => {
+      // Sort descending by id (assuming id is numeric and higher means newer)
+      const sorted = [...res.data].sort((a, b) => b.id - a.id);
+      setParts(sorted);
+      setSearchResults(sorted);
+      setCurrentPage(1);
+    });
   }, [refresh]);
+  // Search handler
+  function handleSearch(e) {
+    e.preventDefault();
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) {
+      setSearchResults(parts);
+      return;
+    }
+    const filtered = parts.filter(part =>
+      [
+        part.part_name,
+        part.model_number,
+        part.article_name,
+        part.article_number,
+        part.part_pseudo_name
+      ].some(field => field && field.toLowerCase().includes(keyword))
+    );
+    setSearchResults(filtered);
+    setCurrentPage(1);
+  }
 
   function handleChange(e) {
     const { name, value, files } = e.target;
@@ -126,41 +156,86 @@ export default function PartManagement() {
       </form>
       <div className="part-list">
         <h2>All Parts</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Model #</th>
-              <th>Article #</th>
-              <th>Article Name</th>
-              <th>Part Number</th>
-              <th>Pseudo Name</th>
-              <th>Weight</th>
-              <th>Size</th>
-              <th>Image</th>
-              <th>Description</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parts.map(part => (
-              <tr key={part.id} className="clickable-row" onClick={() => setModal(part)} style={{ cursor: 'pointer' }}>
-                <td style={{ color: '#0070f3', textDecoration: 'underline' }}>{part.model_number}</td>
-                <td>{part.article_number}</td>
-                <td>{part.article_name}</td>
-                <td>{part.part_name}</td>
-                <td>{part.part_pseudo_name}</td>
-                <td>{part.part_weight}</td>
-                <td>{part.part_size}</td>
-                <td>{part.image && <img src={`/uploads/${part.image}`} alt="part" style={{ width: 40, height: 40, objectFit: 'cover' }} />}</td>
-                <td>{part.part_description}</td>
-                <td onClick={e => e.stopPropagation()}>
-                  <button onClick={() => handleEdit(part)}>Edit</button>
-                  <button onClick={() => handleDelete(part.id)} style={{ color: 'red' }}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <form onSubmit={handleSearch} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+          <input
+            type="text"
+            placeholder="Search by Part #, Model #, Article Name, Article #, Pseudo Name"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ flex: 1, padding: '0.5rem', borderRadius: 6, border: '1px solid #ccc', fontSize: '1rem' }}
+          />
+          <button type="submit" style={{ padding: '0.5rem 1.2rem', background: '#0070f3', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>Search</button>
+        </form>
+        {/* Modern card grid for parts */}
+        {(() => {
+          const totalRecords = searchResults.length;
+          const totalPages = Math.ceil(totalRecords / recordsPerPage);
+          const startIdx = (currentPage - 1) * recordsPerPage;
+          const pagedResults = searchResults.slice(startIdx, startIdx + recordsPerPage);
+          return (
+            <>
+              <div className="parts-grid-header-modern">
+                <div className="parts-col">Model #</div>
+                <div className="parts-col">Article #</div>
+                <div className="parts-col">Article Name</div>
+                <div className="parts-col">Part Number</div>
+                <div className="parts-col">Pseudo Name</div>
+                <div className="parts-col">Weight</div>
+                <div className="parts-col">Size</div>
+                <div className="parts-col">Image</div>
+                <div className="parts-col">Description</div>
+                <div className="parts-col">Actions</div>
+              </div>
+              <div className="parts-grid-list-modern">
+                {pagedResults.map(part => (
+                  <div className="parts-grid-card-modern" key={part.id} onClick={() => setModal(part)}>
+                    <div className="parts-grid-row-modern">
+                      <div className="parts-col parts-link">{part.model_number}</div>
+                      <div className="parts-col">{part.article_number}</div>
+                      <div className="parts-col">{part.article_name}</div>
+                      <div className="parts-col">{part.part_name}</div>
+                      <div className="parts-col">{part.part_pseudo_name}</div>
+                      <div className="parts-col">{part.part_weight}</div>
+                      <div className="parts-col">{part.part_size}</div>
+                      <div className="parts-col">{part.image && <img src={`/uploads/${part.image}`} alt="part" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />}</div>
+                      <div className="parts-col">{part.part_description}</div>
+                      <div className="parts-col parts-action-btns" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => handleEdit(part)} className="parts-icon-btn parts-btn-edit" title="Edit">
+                          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14.85 2.85a2.12 2.12 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5zM13.5 2l-9.5 9.5a1 1 0 0 0-.29.62l-.5 3.5a1 1 0 0 0 1.13 1.13l3.5-.5a1 1 0 0 0 .62-.29l9.5-9.5a3.12 3.12 0 0 0-4.46-4.46z" fill="#fff"/>
+                            <path d="M14.85 2.85a2.12 2.12 0 0 1 3 3l-9.5 9.5-3.5.5.5-3.5 9.5-9.5z" fill="#6366f1"/>
+                          </svg>
+                        </button>
+                        <button onClick={() => handleDelete(part.id)} className="parts-icon-btn parts-btn-delete" title="Delete">
+                          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="8" width="8" height="8" rx="2" fill="#fff"/>
+                            <rect x="6" y="8" width="8" height="8" rx="2" fill="#e53e3e"/>
+                            <path d="M8 10v4M12 10v4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                            <rect x="7" y="4" width="6" height="2" rx="1" fill="#e53e3e"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Pagination controls */}
+              <div className="parts-pagination-modern">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="parts-page-btn-modern"
+                >Prev</button>
+                <span className="parts-page-info-modern">Page {currentPage} of {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="parts-page-btn-modern"
+                >Next</button>
+              </div>
+            </>
+          );
+        })()}
         {modal && (
           <div className="modal-bg" onClick={() => setModal(null)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
@@ -196,10 +271,109 @@ export default function PartManagement() {
         .form-row input[type="file"] { flex: 1; }
         .form-row button { padding: 0.5rem 1.2rem; background: #0070f3; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .form-row button[type="button"] { background: #aaa; margin-left: 1rem; }
-        .part-list table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
-        .part-list th, .part-list td { padding: 0.5rem; border-bottom: 1px solid #eee; text-align: left; }
-        .part-list th { background: #f5f5f5; }
-        .part-list img { border-radius: 4px; }
+        .parts-grid-header-modern {
+          display: grid;
+          grid-template-columns: 1.2fr 1.2fr 2fr 2fr 2fr 1fr 1fr 1fr 2fr 1.2fr;
+          align-items: center;
+          background: linear-gradient(90deg, #e3eefd 0%, #f5f7fa 100%);
+          font-weight: 700;
+          border-radius: 14px 14px 0 0;
+          padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+          box-shadow: 0 2px 12px #2563eb11;
+          font-size: 1.13rem;
+          margin-bottom: 0.5rem;
+        }
+        .parts-grid-list-modern {
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+        .parts-grid-card-modern {
+          background: #fff;
+          border-radius: 14px;
+          box-shadow: 0 2px 16px #2563eb11;
+          padding: 1.2rem 1.5rem;
+          transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+          cursor: pointer;
+        }
+        .parts-grid-card-modern:hover {
+          box-shadow: 0 8px 32px #2563eb22;
+          background: #2563eb11;
+          color: #2563eb;
+        }
+        .parts-grid-row-modern {
+          display: grid;
+          grid-template-columns: 1.2fr 1.2fr 2fr 2fr 2fr 1fr 1fr 1fr 2fr 1.2fr;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .parts-col { font-size: 1.05rem; }
+        .parts-link { color: #2563eb; text-decoration: underline; font-weight: 600; }
+        .parts-action-btns {
+          display: flex;
+          flex-direction: row;
+          gap: 0.5rem;
+          align-items: center;
+        }
+        .parts-icon-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          border: none;
+          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
+          box-shadow: 0 2px 8px #6366f133;
+          cursor: pointer;
+          transition: background 0.15s, box-shadow 0.15s;
+          padding: 0;
+        }
+        .parts-btn-edit svg { display: block; }
+        .parts-btn-edit {
+          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
+        }
+        .parts-btn-edit:hover {
+          background: #2563eb;
+          box-shadow: 0 4px 16px #6366f144;
+        }
+        .parts-btn-delete svg { display: block; }
+        .parts-btn-delete {
+          background: #e53e3e;
+        }
+        .parts-btn-delete:hover {
+          background: #b91c1c;
+          box-shadow: 0 4px 16px #e53e3e44;
+        }
+        .parts-pagination-modern {
+          margin-top: 2rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 1rem;
+        }
+        .parts-page-btn-modern {
+          padding: 0.6rem 1.4rem;
+          border-radius: 8px;
+          border: none;
+          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
+          color: #fff;
+          font-weight: 600;
+          font-size: 1rem;
+          box-shadow: 0 2px 8px #6366f133;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .parts-page-btn-modern:disabled {
+          background: #eee;
+          color: #888;
+          cursor: not-allowed;
+        }
+        .parts-page-info-modern {
+          font-size: 1.08rem;
+          color: #222;
+          font-weight: 500;
+        }
         .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0008; display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: #fff; border-radius: 10px; padding: 2rem; min-width: 320px; max-width: 90vw; box-shadow: 0 8px 32px #0003; position: relative; }
         .modal-details-2col {

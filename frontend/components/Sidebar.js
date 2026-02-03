@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-export default function Sidebar({ user, logout }) {
+export default function Sidebar({ user, onLogout }) {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -49,7 +49,7 @@ export default function Sidebar({ user, logout }) {
               </div>
               <span>{user.name}</span>
             </div>
-            <button onClick={logout} style={{ width: '100%', padding: '0.5rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            <button onClick={onLogout} style={{ width: '100%', padding: '0.5rem', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
               Logout
             </button>
           </div>
@@ -67,6 +67,7 @@ export default function Sidebar({ user, logout }) {
             left: 0;
             top: 0;
             z-index: 100;
+            font-family: 'Raleway', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
           }
           .sidebar-logo {
             margin-bottom: 2.5rem;
@@ -86,6 +87,7 @@ export default function Sidebar({ user, logout }) {
             transition: background 0.15s, color 0.15s;
             display: flex;
             align-items: center;
+            font-family: 'Raleway', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
           }
           .sidebar-menu a:hover, .sidebar-menu a.active {
             background: #e3eefd;
